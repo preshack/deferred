@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bob's Coffee POS - Offline Scanner</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="glass-panel p-8 rounded-2xl shadow-2xl max-w-md w-full text-center">
+
+        <h1 class="text-3xl font-bold mb-2 text-blue-400">☕ Bob's Coffee</h1>
+        <p class="text-slate-400 mb-6 text-sm">Offline Payment Scanner (Deferred API)</p>
+
+
+
+        <!-- OTP Input Window -->
+        <div id="scannerSection">
+            <h2 class="text-lg font-semibold mb-3">Process Emergency Payment</h2>
+            <p class="text-xs text-slate-400 mb-4">Enter the exact amount and Alice's 16-Digit Emergency Code below.</p>
+
+            <div class="mb-4 text-left">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Amount to Charge
+                    ($)</label>
+                <input type="number" id="amountInput" step="0.01" min="0.01" placeholder="5.00"
+                    class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-lg font-bold text-slate-300 focus:outline-none focus:border-blue-500 shadow-inner">
+            </div>
+
+            <div class="mb-5 text-left">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">16-Digit
+                    Emergency Code</label>
+                <input type="text" id="otpInput" placeholder="1234-5678-9012-3456"
+                    class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-lg font-mono text-center tracking-widest text-emerald-400 focus:outline-none focus:border-blue-500 shadow-inner">
+            </div>
+
+            <button id="scanBtn" onclick="processPayload()"
+                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl transition duration-200 shadow-lg flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Verify & Settle Payment
+            </button>
+            <p id="processingText" class="mt-3 text-sm text-blue-400 animate-pulse hidden font-semibold">Contacting
+                server...</p>
+        </div>
+
+        <!-- Payment Result Banner -->
+        <div id="resultBox"
+            class="hidden rounded-xl p-5 transition-all duration-300 transform scale-95 opacity-0 mt-6 shadow-2xl">
+            <h3 id="resultTitle" class="text-2xl font-bold mb-2"></h3>
+            <p id="resultText" class="text-sm font-medium leading-relaxed"></p>
+            <div id="resultAmountBox" class="bg-black/20 rounded-lg p-4 mt-4 hidden">
+                <p class="text-xs text-slate-300 uppercase tracking-wide font-bold">Net Settlement</p>
+                <p id="resultAmount" class="text-4xl font-black mt-1 text-white"></p>
+            </div>
+            <button onclick="resetScanner()"
+                class="mt-6 w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-bold transition-all">
+                Process Next Customer
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function processPayload() {
+            const amountVal = document.getElementById('amountInput').value.trim();
+            const otpCode = document.getElementById('otpInput').value.trim();
+
+            if (!amountVal || !otpCode) {
+                alert("Please enter both the Amount and the 16-Digit Emergency Code.");
+                return;
+            }
+
+            // Convert to cents
+            const amountCents = Math.round(parseFloat(amountVal) * 100);
+
+            // UI Changes
+            document.getElementById('scanBtn').classList.add('hidden');
+            document.getElementById('processingText').classList.remove('hidden');
+
+            const apiUrl = "http://localhost:8000";
+            const apiKey = "sk_test_1234567890abcdef1234567890abcdef";
+
+            try {
+                // Send the emergency OTP to the new settlement endpoint
+                const response = await fetch(`${apiUrl}/settlements/emergency`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey,
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({
+                        merchant_id: "merchant_bob",
+                        amount_cents: amountCents,
+                        otp_code: otpCode
+                    })
+                });
+
+                const data = await response.json();
+
+                // Show Success or Error
+                document.getElementById('scannerSection').classList.add('hidden');
+
+                const resBox = document.getElementById('resultBox');
+                const resTitle = document.getElementById('resultTitle');
+                const resText = document.getElementById('resultText');
+                const resAmountBox = document.getElementById('resultAmountBox');
+                const resAmount = document.getElementById('resultAmount');
+
+                resBox.className = 'rounded-xl p-5 transition-all duration-300 transform scale-100 opacity-100 mt-2 shadow-2xl';
+                resBox.classList.remove('hidden');
+
+                if (response.ok) {
+                    // Success Styling
+                    resBox.classList.add('bg-gradient-to-br', 'from-emerald-600', 'to-teal-800', 'border', 'border-emerald-400');
+                    resTitle.innerText = "✅ Payment Settled!";
+
+                    const dollars = (data.net_cents / 100).toFixed(2);
+                    resAmount.innerText = `$${dollars}`;
+                    resAmountBox.classList.remove('hidden');
+
+                    resText.innerText = "The cryptographic Secure Element signature was verified. Alice's funds were mathematically guaranteed entirely offline!";
+                } else {
+                    // Error Styling
+                    resBox.classList.add('bg-gradient-to-br', 'from-rose-700', 'to-red-900', 'border', 'border-rose-500');
+                    resTitle.innerText = "❌ Transaction Failed";
+                    resAmountBox.classList.add('hidden');
+
+                    if (data.detail && data.detail.error) {
+                        resText.innerText = `${data.detail.error.message}\n\nReason ID: ${data.detail.error.code}`;
+                    } else if (Array.isArray(data.detail)) {
+                        resText.innerText = "Validation Error - Invalid Payload format.";
+                    } else {
+                        resText.innerText = JSON.stringify(data);
+                    }
+                }
+
+            } catch (err) {
+                console.error(err);
+                alert(`Connection Error (${err.message}): Please ensure the Docker backend is running on localhost:8000!`);
+
+                // Reset UI on hard error
+                document.getElementById('scanBtn').classList.remove('hidden');
+                document.getElementById('processingText').classList.add('hidden');
+            }
+        }
+
+        function resetScanner() {
+            document.getElementById('amountInput').value = '';
+            document.getElementById('otpInput').value = '';
+            document.getElementById('resultBox').className = 'hidden';
+
+            // Remove previous color gradients
+            document.getElementById('resultBox').classList.remove('bg-gradient-to-br', 'from-emerald-600', 'to-teal-800', 'border-emerald-400', 'from-rose-700', 'to-red-900', 'border-rose-500');
+
+            document.getElementById('scannerSection').classList.remove('hidden');
+            document.getElementById('scanBtn').classList.remove('hidden');
+            document.getElementById('processingText').classList.add('hidden');
+        }
+    </script>
+</body>
+
+</html>

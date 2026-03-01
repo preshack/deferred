@@ -1,0 +1,76 @@
+services:
+  # === PostgreSQL 15 ===
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: deferred
+      POSTGRES_PASSWORD: deferred_secret
+      POSTGRES_DB: deferred_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U deferred -d deferred_db" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # === Redis 7 ===
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    command: redis-server --save 60 1 --loglevel warning
+
+  # === RabbitMQ 3.12 ===
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: deferred
+      RABBITMQ_DEFAULT_PASS: deferred_secret
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # === Deferred API ===
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://deferred:deferred_secret@db:5432/deferred_db
+      DATABASE_URL_SYNC: postgresql://deferred:deferred_secret@db:5432/deferred_db
+      REDIS_URL: redis://redis:6379/0
+      RABBITMQ_URL: amqp://deferred:deferred_secret@rabbitmq:5672/
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  rabbitmqdata:
