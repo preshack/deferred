@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deferred API: Live Hackathon Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-twilight.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            /* Slate 950 */
+            color: #f8fafc;
+            /* Slate 50 */
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Animated Blob Background */
+        .blob {
+            position: fixed;
+            filter: blur(80px);
+            z-index: -1;
+            border-radius: 50%;
+            animation: move 20s infinite alternate cubic-bezier(0.5, 0, 0.5, 1);
+        }
+
+        .blob-1 {
+            top: -20%;
+            left: -10%;
+            width: 600px;
+            height: 600px;
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        /* Blue */
+        .blob-2 {
+            bottom: -20%;
+            right: -10%;
+            width: 700px;
+            height: 700px;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        /* Emerald */
+        .blob-3 {
+            top: 40%;
+            left: 40%;
+            width: 500px;
+            height: 500px;
+            background: rgba(99, 102, 241, 0.1);
+            animation-delay: -10s;
+        }
+
+        /* Indigo */
+
+        @keyframes move {
+            0% {
+                transform: scale(1) translate(0, 0);
+            }
+
+            100% {
+                transform: scale(1.1) translate(100px, 50px);
+            }
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(96, 165, 250, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        pre[class*="language-"] {
+            background: #0f172a !important;
+            border-radius: 0.75rem;
+            margin: 0 !important;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+        }
+
+        code[class*="language-"] {
+            text-shadow: none !important;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .step-badge {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+        }
+
+        .step-badge-offline {
+            background: linear-gradient(135deg, #ea580c, #dc2626);
+        }
+
+        .step-badge-sync {
+            background: linear-gradient(135deg, #059669, #10b981);
+        }
+    </style>
+</head>
+
+<body class="antialiased min-h-screen relative pb-20">
+
+    <!-- Background Elements -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <div class="max-w-5xl mx-auto px-6 pt-16">
+
+        <!-- Header -->
+        <div class="text-center mb-16">
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
+                Deferred API <br />
+                <span class="gradient-text">Live Stage Demo</span>
+            </h1>
+            <p class="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                Your beautiful, click-to-copy podium script. All credentials are pre-populated so you can focus on the
+                presentation.
+            </p>
+        </div>
+
+        <!-- Credentials Panel -->
+        <div class="glass-card rounded-2xl p-6 mb-12">
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
+                    </path>
+                </svg>
+                Current Active Identity
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
+                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">🧑 Alice's Wallet ID</p>
+                    <div class="flex items-center justify-between">
+                        <code class="text-emerald-400 font-mono text-sm truncate">wallet_kvtgrkqKXTA8</code>
+                        <button onclick="copyText('wallet_kvtgrkqKXTA8', this)"
+                            class="text-slate-500 hover:text-white transition-colors"><svg class="w-4 h-4" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                </path>
+                            </svg></button>
+                    </div>
+                </div>
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
+                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">🧑 Alice's Auth Token (JWT)</p>
+                    <div class="flex items-center justify-between">
+                        <code
+                            class="text-blue-400 font-mono text-sm truncate max-w-[200px]">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZV9kZW1v...</code>
+                        <button
+                            onclick="copyText('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZV9kZW1vXzUzNjciLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzcyMzM2MDMxLCJleHAiOjE3NzI0MjI0MzEsImp0aSI6IjY0MGM3ZjZmNjc0OWE1MGFlNDdmYzgxZWZmZWM3MDYyIn0.POxofa0Luw6Iv6hgpS6X-91HpqgG9bfvYckiauWhqI8', this)"
+                            class="text-slate-500 hover:text-white transition-colors"><svg class="w-4 h-4" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                </path>
+                            </svg></button>
+                    </div>
+                </div>
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
+                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">☕ Bob's Wallet ID</p>
+                    <div class="flex items-center justify-between">
+                        <code class="text-orange-400 font-mono text-sm truncate">wallet_4TsnLgfz74jS</code>
+                        <button onclick="copyText('wallet_4TsnLgfz74jS', this)"
+                            class="text-slate-500 hover:text-white transition-colors"><svg class="w-4 h-4" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                </path>
+                            </svg></button>
+                    </div>
+                </div>
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
+                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">☕ Bob's Auth Token (JWT)</p>
+                    <div class="flex items-center justify-between">
+                        <code
+                            class="text-yellow-400 font-mono text-sm truncate max-w-[200px]">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJib2JfZGVtb...</code>
+                        <button
+                            onclick="copyText('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJib2JfZGVtb182MDk4IiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc3MjMzNjAzMiwiZXhwIjoxNzcyNDIyNDMyLCJqdGkiOiJmMzBiMWE4ZjBjODRkMjYwMDVkOWMzZDk0NmExNTUzYSJ9.QoNatKDpeoOt8NOAmmYRRlhTckY3-5aqtsP44qAV4Do', this)"
+                            class="text-slate-500 hover:text-white transition-colors"><svg class="w-4 h-4" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                </path>
+                            </svg></button>
+                    </div>
+                </div>
+            </div>
+            <p class="text-xs text-slate-500 mt-4 italic">Note: These are hardcoded from your <code class="text-slate-400">demo_creds.env</code>. If you re-run <code class="text-slate-400">setup_creds.py</code>, regenerate this file too.</p>
+        </div>
+
+
+        <!-- STAGE 1 -->
+        <div class="mb-16 relative pl-8 border-l-2 border-slate-800">
+            <div
+                class="absolute -left-[17px] top-0 w-8 h-8 rounded-full step-badge flex items-center justify-center font-bold shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                1</div>
+            <h3 class="text-2xl font-bold mb-2">The Setup Phase (Wi-Fi On)</h3>
+            <p class="text-slate-400 mb-6">Explain to the judges that Alice is at home on Wi-Fi, getting ready for a
+                festival.</p>
+
+            <!-- Card 1.1 -->
+            <div class="glass-card rounded-2xl overflow-hidden mb-6">
+                <div class="p-5 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/20">
+                    <h4 class="font-semibold text-white">A. Check Alice's Current Balance</h4>
+                    <button onclick="copyCode(this, 'code-1-1')"
+                        class="bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs py-1.5 px-3 rounded-md transition-colors font-medium flex items-center">
+                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                            </path>
+                        </svg> Copy Command
+                    </button>
+                </div>
+                <div class="relative">
+                    <pre><code id="code-1-1" class="language-bash">curl -s -X GET "http://localhost:8000/wallets/wallet_kvtgrkqKXTA8" \
+     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZV9kZW1vXzUzNjciLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzcyMzM2MDMxLCJleHAiOjE3NzI0MjI0MzEsImp0aSI6IjY0MGM3ZjZmNjc0OWE1MGFlNDdmYzgxZWZmZWM3MDYyIn0.POxofa0Luw6Iv6hgpS6X-91HpqgG9bfvYckiauWhqI8" | jq '.balances'</code></pre>
+                </div>
+                <div class="p-4 bg-slate-900/50 text-sm text-slate-300">
+                    <span class="text-emerald-400 font-bold">Talking Point:</span> "These are Alice's two segregated balances — <strong>online</strong> (spendable with internet) and <strong>offline_available</strong> (cryptographically reserved for offline use). Note both values — we'll watch them change in real time."
+                </div>
+            </div>
+
+            <!-- Card 1.2 -->
+            <div class="glass-card rounded-2xl overflow-hidden mb-6">
+                <div class="p-5 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/20">
+                    <h4 class="font-semibold text-white">B. Top-Up The Wallet (The Magic Move)</h4>
+                    <button onclick="copyCode(this, 'code-1-2')"
+                        class="bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs py-1.5 px-3 rounded-md transition-colors font-medium flex items-center">
+                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                            </path>
+                        </svg> Copy Command
+                    </button>
+                </div>
+                <div class="relative">
+                    <pre><code id="code-1-2" class="language-bash">curl -s -X POST "http://localhost:8000/topups" \
+     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZV9kZW1vXzUzNjciLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzcyMzM2MDMxLCJleHAiOjE3NzI0MjI0MzEsImp0aSI6IjY0MGM3ZjZmNjc0OWE1MGFlNDdmYzgxZWZmZWM3MDYyIn0.POxofa0Luw6Iv6hgpS6X-91HpqgG9bfvYckiauWhqI8" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "amount_cents": 20000, 
+           "offline_allocation_cents": 5000, 
+           "wallet_id": "wallet_kvtgrkqKXTA8", 
+           "source": {"type": "card", "id": "tok_mastercard"}
+         }' | jq '{amount_cents, offline_allocation_cents, status}'</code></pre>
+                </div>
+                <div class="p-4 bg-slate-900/50 text-sm text-slate-300">
+                    <span class="text-emerald-400 font-bold">Talking Point:</span> "Alice deposits $200 from her bank card. The API securely segregates $50 of that into her <em>offline reserve</em> — a cryptographic pool backed by real tokens on-device. Her online balance goes up, and a $50 offline pool is provisioned. <strong>Note: <code>generate_alice_qr.py</code> does this automatically only if she doesn't already have enough offline funds.</strong>"
+                </div>
+            </div>
+
+            <!-- Card 1.3 -->
+            <div class="glass-card rounded-2xl overflow-hidden mb-6">
+                <div class="p-5 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/20">
+                    <h4 class="font-semibold text-white">C. Generate the Offline Emergency QR Code</h4>
+                    <button onclick="copyCode(this, 'code-1-3')"
+                        class="bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs py-1.5 px-3 rounded-md transition-colors font-medium flex items-center">
+                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                            </path>
+                        </svg> Copy Command
+                    </button>
+                </div>
+                <div class="relative">
+                    <pre><code id="code-1-3" class="language-bash">python3 generate_alice_qr.py</code></pre>
+                </div>
+                <div class="p-4 bg-slate-900/50 text-sm text-slate-300">
+                    <span class="text-emerald-400 font-bold">Talking Point:</span> "Alice is heading to a music festival with zero cell service. She runs this script, which: (1) tops up her wallet if needed, (2) mints a one-time offline token for up to $50, and (3) <strong>immediately deducts that $50 from her offline balance</strong> to prevent double-use. The QR code printed on screen encodes a cryptographically signed OTP. Keep the QR image visible on half your screen!"
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE 2 -->
+        <div class="mb-16 relative pl-8 border-l-2 border-slate-800">
+            <div
+                class="absolute -left-[17px] top-0 w-8 h-8 rounded-full step-badge-offline flex items-center justify-center font-bold shadow-[0_0_15px_rgba(234,88,12,0.5)]">
+                2</div>
+            <h3 class="text-2xl font-bold mb-2">The Disconnect Phase (Turn Wi-Fi OFF!)</h3>
+            <div class="bg-rose-900/40 border border-rose-500/50 text-rose-200 p-4 rounded-xl mb-6 flex items-start">
+                <svg class="w-6 h-6 mr-3 text-rose-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+                <p><strong>Crucial Stage Theatrics:</strong> Physically turn off your Mac's Wi-Fi right now in front of
+                    the judges! Prove there is absolutely zero internet connection.</p>
+            </div>
+
+            <!-- Card 2.1 -->
+            <div class="glass-card rounded-2xl overflow-hidden mb-6">
+                <div class="p-5 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/20">
+                    <h4 class="font-semibold text-white">A. Bob Scans the QR Code</h4>
+                    <button onclick="copyCode(this, 'code-2-1')"
+                        class="bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs py-1.5 px-3 rounded-md transition-colors font-medium flex items-center">
+                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                            </path>
+                        </svg> Copy Command
+                    </button>
+                </div>
+                <div class="relative">
+                    <pre><code id="code-2-1" class="language-bash">python3 bob_scan_qr.py</code></pre>
+                </div>
+                <div class="p-4 bg-slate-900/50 text-sm text-slate-300">
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>The script will prompt you: <code
+                                class="text-slate-400 bg-black/50 px-1 rounded">Enter exactly how much to charge Alice (e.g. 5.00): $</code>
+                        </li>
+                        <li>Type: <strong>5.00</strong> and hit Enter.</li>
+                        <li>Your webcam will turn on. Point it at Alice's QR code on your screen!</li>
+                        <li class="text-emerald-300"><strong>What happens behind the scenes:</strong> Alice's offline balance was pre-deducted at QR generation. Bob's settlement credits his wallet with <strong>net_cents</strong> (amount minus 3% processing fee). Any unused token value is <strong>automatically refunded back to Alice's offline pool</strong> — she only loses what was actually charged.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Card 2.2 -->
+            <div class="glass-card rounded-2xl overflow-hidden mb-6 border-rose-500/30">
+                <div class="p-5 border-b border-slate-700/50 flex justify-between items-center bg-rose-900/10">
+                    <h4 class="font-semibold text-white">B. The Double Spend Defense (Still Offline)</h4>
+                    <button onclick="copyCode(this, 'code-2-2')"
+                        class="bg-rose-600/20 hover:bg-rose-600/40 text-rose-400 text-xs py-1.5 px-3 rounded-md transition-colors font-medium flex items-center">
+                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                            </path>
+                        </svg> Copy Command
+                    </button>
+                </div>
+                <div class="relative">
+                    <pre><code id="code-2-2" class="language-bash">python3 bob_scan_qr.py</code></pre>
+                </div>
+                <div class="p-4 bg-rose-900/20 text-sm text-rose-200">
+                    <span class="text-rose-400 font-bold mb-2 block">Talking Point:</span>
+                    <p class="mb-3">"What if Alice tries to cheat Bob by showing the EXACT same QR code again for
+                        another $5 coffee?"</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Run the script again.</li>
+                        <li>Type <strong>5.00</strong></li>
+                        <li>Scan the EXACT SAME QR CODE again.</li>
+                        <li><strong>Result:</strong> It aggressively fails because the token is spent. Double spending
+                            is cryptographically impossible!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE 3 -->
+        <div class="mb-20 relative pl-8 border-l-2 border-transparent">
+            <div
+                class="absolute -left-[17px] top-0 w-8 h-8 rounded-full step-badge-sync flex items-center justify-center font-bold shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+                3</div>
+            <h3 class="text-2xl font-bold mb-2">The Reconciliation Phase</h3>
+            <p class="text-slate-400 mb-6">Turn your Mac's Wi-Fi back ON right now!</p>
+
+            <!-- Card 3.1 -->
+            <div class="glass-card rounded-2xl overflow-hidden mb-6 border-emerald-500/30">
+                <div class="p-5 border-b border-slate-700/50 flex justify-between items-center bg-emerald-900/10">
+                    <h4 class="font-semibold text-white">A. Check Alice's Final Reconciled Balance</h4>
+                    <button onclick="copyCode(this, 'code-3-1')"
+                        class="bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 text-xs py-1.5 px-3 rounded-md transition-colors font-medium flex items-center">
+                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                            </path>
+                        </svg> Copy Command
+                    </button>
+                </div>
+                <div class="relative">
+                    <pre><code id="code-3-1" class="language-bash">curl -s -X GET "http://localhost:8000/wallets/wallet_kvtgrkqKXTA8" \
+     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZV9kZW1vXzUzNjciLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzcyMzM2MDMxLCJleHAiOjE3NzI0MjI0MzEsImp0aSI6IjY0MGM3ZjZmNjc0OWE1MGFlNDdmYzgxZWZmZWM3MDYyIn0.POxofa0Luw6Iv6hgpS6X-91HpqgG9bfvYckiauWhqI8" | jq '.balances'</code></pre>
+                </div>
+                <div class="p-4 bg-emerald-900/20 text-sm text-emerald-200">
+                    <span class="text-emerald-400 font-bold mb-2 block">Talking Point — Alice's Side:</span>
+                    <p>"Alice reconnects to Wi-Fi. The API has already reconciled everything in real time."</p>
+                    <p class="mt-2">Her <strong>Online Balance</strong> is untouched — only her offline pool was used.</p>
+                    <p class="mt-1">Her <strong>Offline Balance</strong> decreased by <em>exactly</em> what Bob charged — <strong>$5.00</strong>. The unused $45 was automatically refunded back to her offline pool at settlement time. Not a single cent was lost to rounding or over-deduction.</p>
+                </div>
+            </div>
+
+            <!-- Card 3.2 -->
+            <div class="glass-card rounded-2xl overflow-hidden mb-6 border-orange-500/30">
+                <div class="p-5 border-b border-slate-700/50 flex justify-between items-center bg-orange-900/10">
+                    <h4 class="font-semibold text-white">B. Check Bob's Balance (The Other Side of the Trade)</h4>
+                    <button onclick="copyCode(this, 'code-3-2')"
+                        class="bg-orange-600/20 hover:bg-orange-600/40 text-orange-400 text-xs py-1.5 px-3 rounded-md transition-colors font-medium flex items-center">
+                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                            </path>
+                        </svg> Copy Command
+                    </button>
+                </div>
+                <div class="relative">
+                    <pre><code id="code-3-2" class="language-bash">curl -s -X GET "http://localhost:8000/wallets/wallet_4TsnLgfz74jS" \
+     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJib2JfZGVtb182MDk4IiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc3MjMzNjAzMiwiZXhwIjoxNzcyNDIyNDMyLCJqdGkiOiJmMzBiMWE4ZjBjODRkMjYwMDVkOWMzZDk0NmExNTUzYSJ9.QoNatKDpeoOt8NOAmmYRRlhTckY3-5aqtsP44qAV4Do" | jq '.balances'</code></pre>
+                </div>
+                <div class="p-4 bg-orange-900/20 text-sm text-orange-200">
+                    <span class="text-orange-400 font-bold mb-2 block">The Grand Finale — Bob's Side:</span>
+                    <p>"Now let's look at Bob the merchant. He had zero balance before. After scanning Alice's QR code, his <strong>online_balance_cents increased</strong> by the net settlement amount — $5.00 minus the 3% processing fee = <strong>$4.85</strong>."</p>
+                    <p class="mt-2">"This happened <em>atomically</em>, with no internet connection at the point of sale. Alice's cryptographic proof was the only thing needed. The ledger settled itself the moment Bob came back online."</p>
+                    <p class="mt-4 italic text-center font-bold text-lg text-emerald-300">Drop the microphone! 🎤</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script>
+        function copyText(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = `<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+            });
+        }
+
+        function copyCode(btn, elementId) {
+            const codeEl = document.getElementById(elementId);
+            if (!codeEl) return;
+            navigator.clipboard.writeText(codeEl.textContent).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = `<svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!`;
+                btn.classList.add('bg-emerald-600/20', 'text-emerald-400');
+                btn.classList.remove('bg-blue-600/20', 'text-blue-400');
+
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.classList.remove('bg-emerald-600/20', 'text-emerald-400');
+                    btn.classList.add('bg-blue-600/20', 'text-blue-400');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+
+</html>

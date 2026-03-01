@@ -20,6 +20,8 @@ from app.models import (
     Settlement,
     Transaction,
     TokenStatus,
+    TxMode,
+    TxStatus,
     TxStatus,
     SettlementStatus,
     generate_prefixed_id,
@@ -196,6 +198,7 @@ class SettlementService:
         merchant_id: str,
         amount_cents: int,
         otp_code: str,
+        payee_wallet_id: Optional[str] = None,
     ) -> dict:
         """Settle a 16-digit offline emergency code."""
         # Find tokens matching the OTP code
@@ -232,9 +235,22 @@ class SettlementService:
         fee_cents = int(amount_cents * FEE_RATE)
         net_cents = amount_cents - fee_cents
 
-        # Mark tokens as spent globally
+        # Sort tokens so we consume smallest first (or largest, doesn't matter much)
+        tokens.sort(key=lambda t: t.denomination_cents)
+        
+        collected = 0
+        consumed_tokens = []
+        unused_tokens = []
+        
         for token in tokens:
-            # For OTPs, we completely burn the code and all tokens linked to it to prevent double spend
+            if collected < amount_cents:
+                consumed_tokens.append(token)
+                collected += token.denomination_cents
+            else:
+                unused_tokens.append(token)
+
+        # Mark consumed tokens as spent globally
+        for token in consumed_tokens:
             global_spend = GlobalSpend(
                 token_id=token.id,
                 tx_id=tx_id,
@@ -247,11 +263,44 @@ class SettlementService:
             token.spent_at = now
             # Prevent token from ever being looked up by this code again
             token.otp_code = f"SPENT_{token.otp_code}" 
+            
+        # Refund unused tokens to the offline pool so Alice keeps her money
+        refund_cents = sum(t.denomination_cents for t in unused_tokens)
+        for token in unused_tokens:
+            token.otp_code = None
+
+        # Restore Alice's offline balance for unused tokens
+        if refund_cents > 0:
+            from app.models import Wallet as _Wallet
+            payer_wallet = await db.get(_Wallet, tokens[0].wallet_id)
+            if payer_wallet:
+                payer_wallet.offline_balance_cents += refund_cents
+                payer_wallet.updated_at = now
+                logger.info(
+                    "offline_balance_refunded",
+                    wallet_id=payer_wallet.id,
+                    refund_cents=refund_cents,
+                )
+
+        # Create a real Transaction record first (required by FK settlement.payment_id)
+        transaction = Transaction(
+            id=tx_id,
+            wallet_id=tokens[0].wallet_id,  # Use wallet from first consumed token
+            merchant_id=merchant_id,
+            mode=TxMode.OFFLINE,
+            status=TxStatus.SUCCEEDED,
+            amount_cents=amount_cents,
+            currency="usd",
+            description=f"Offline emergency OTP payment to {merchant_id}",
+            settled_at=now,
+        )
+        db.add(transaction)
+        await db.flush()  # Flush so the FK is satisfied before Settlement insert
 
         # Create settlement record
         settlement = Settlement(
             id=settlement_id,
-            payment_id=tx_id,  # Link to dummy tx or actual tx
+            payment_id=tx_id,
             merchant_id=merchant_id,
             status=SettlementStatus.GUARANTEED,
             amount_cents=amount_cents,
@@ -264,6 +313,21 @@ class SettlementService:
         )
         db.add(settlement)
         await db.flush()
+
+        # Credit payee wallet (e.g. Bob's wallet) with net amount
+        payee_wallet = None
+        if payee_wallet_id:
+            from app.models import Wallet
+            payee_wallet = await db.get(Wallet, payee_wallet_id)
+            if payee_wallet:
+                payee_wallet.online_balance_cents += net_cents
+                payee_wallet.updated_at = now
+                await db.flush()
+                logger.info(
+                    "payee_wallet_credited",
+                    payee_wallet_id=payee_wallet_id,
+                    net_cents=net_cents,
+                )
 
         logger.info(
             "emergency_settlement_created",
@@ -288,6 +352,11 @@ class SettlementService:
                 "destination": settlement.payout_destination,
                 "estimated_arrival": settlement.payout_estimated_arrival.isoformat(),
             },
+            "payee_wallet": {
+                "id": payee_wallet_id,
+                "credited_cents": net_cents,
+                "new_online_balance_cents": payee_wallet.online_balance_cents if payee_wallet else None,
+            } if payee_wallet_id else None,
         }
 
 

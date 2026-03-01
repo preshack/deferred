@@ -108,6 +108,7 @@ async def create_emergency_settlement(
             merchant_id=body.merchant_id,
             amount_cents=body.amount_cents,
             otp_code=body.otp_code,
+            payee_wallet_id=body.payee_wallet_id,
         )
         return result
     except SettlementError as e:

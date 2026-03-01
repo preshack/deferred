@@ -161,7 +161,7 @@ class OfflineToken(Base):
     spent_in_tx = Column(String(32), nullable=True)
     spent_at = Column(DateTime(timezone=True), nullable=True)
     destruction_proof = Column(LargeBinary, nullable=True)
-    otp_code = Column(String(19), nullable=True)  # Format: XXXX-XXXX-XXXX-XXXX
+    otp_code = Column(String(50), nullable=True)  # Format: XXXX-XXXX-XXXX-XXXX (or SPENT_XXXX-XXXX-XXXX-XXXX after settlement)
 
     # Relationships
     wallet = relationship("Wallet", back_populates="tokens")

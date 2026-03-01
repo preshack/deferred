@@ -254,6 +254,7 @@ class EmergencySettlementCreate(BaseModel):
     merchant_id: str = Field(..., min_length=1)
     amount_cents: int = Field(..., gt=0)
     otp_code: str = Field(..., description="16-digit Emergency OTP Code")
+    payee_wallet_id: Optional[str] = Field(default=None, description="Wallet ID to credit with net settlement amount")
 
 class EmergencyPaymentCreate(BaseModel):
     wallet_id: str = Field(..., min_length=1)
